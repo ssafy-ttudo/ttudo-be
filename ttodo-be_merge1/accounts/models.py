@@ -10,6 +10,8 @@ class User(AbstractUser):
     social = models.CharField(max_length=50)
     created_date = models.DateField(auto_now_add=True)
     friend_list = models.ManyToManyField('self', through='UserList', symmetrical=False, related_name='friends')
+    access_token = models.TextField(blank=True, null=True)
+    refresh_token = models.TextField(blank=True, null=True)
     
 class UserList(models.Model):
     # 추가한 친구

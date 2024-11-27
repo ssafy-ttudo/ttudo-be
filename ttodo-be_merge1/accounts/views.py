@@ -86,6 +86,7 @@ class NaverCallbackAPIView(APIView):
             
             user = User(username=social_id, nickname=nickname, social_id=social_id, profile_img=profile_img)
             
+
                 
             # 사용자 조회와 로그인
             user, created = User.objects.get_or_create(
@@ -98,6 +99,11 @@ class NaverCallbackAPIView(APIView):
                 }
             )
             
+            user.access_token = token_data.get("access_token")
+            user.refresh_token = token_data.get("refresh_token")
+            user.save()
+
+
             login(request, user)
             
             
@@ -193,17 +199,23 @@ class KakaoCallbackAPIView(APIView):
         # print(social_id)
         
         user, created = User.objects.get_or_create(
-                social_id=social_id,
-                defaults={
-                    'nickname' : nickname,
-                    'profile_img': profile_img,
-                    'username':social_id,
-                    'social':'KAKAO',
-                }
-            )
-            
+            social_id=social_id,
+            defaults={
+                'nickname': nickname,
+                'profile_img': profile_img,
+                'username': social_id,
+                'social': 'KAKAO',
+                'access_token': token_req_json.get('access_token'),
+                'refresh_token': token_req_json.get('refresh_token'),
+            }
+        )
+
+        if not created:
+            user.access_token = token_req_json.get('access_token')
+            user.refresh_token = token_req_json.get('refresh_token')
+            user.save()
+
         login(request, user)
-        # print('리다이렉트 성공?')
         return redirect('mypage:mypage')
     
 ### 로그아웃
