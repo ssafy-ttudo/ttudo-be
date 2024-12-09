@@ -1,6 +1,11 @@
 # mypage/views.py
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+
+# django에 내장된 토큰 인증
+# from rest_framework.authentication import TokenAuthentication
+# from rest_framework.decorators import authentication_classes
+
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -10,6 +15,8 @@ from boards.models import Ttodo
 from .serializers import TodoSerializer, LikedTodoSerializer
 
 @api_view(['GET'])
+# 토큰 인증 데코레이터
+# @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def mypage_view(request):
     user = request.user
@@ -26,6 +33,8 @@ def mypage_view(request):
             'profile_img': user.profile_img,
             'social_type': user.social,
             'created_date': user.created_date,
+            'access_token': user.access_token,
+            'refresh_token': user.refresh_token,
             'todo_count': my_todos.count(),
         },
         'my_todos': TodoSerializer(my_todos, many=True, context={'request': request}).data,

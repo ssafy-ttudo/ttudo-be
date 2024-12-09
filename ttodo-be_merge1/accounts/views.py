@@ -5,6 +5,7 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_list_or_404, get_object_or_404
 import requests
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
@@ -103,13 +104,16 @@ class NaverCallbackAPIView(APIView):
             user.refresh_token = token_data.get("refresh_token")
             user.save()
 
-
+            # 혹시 토큰 안 받아와지면 django에서 제공하는 토큰 생성
+            # token, _ = Token.objects.get_or_create(user=user)
+            
             login(request, user)
             
             
             
             # 사용자 정보 반환 (예: 프론트엔드로 전달)
             return redirect('mypage:mypage')
+            # return Response({'token_key':token.key, 'token':token}, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
             print(f"에러 발생: {e}")
@@ -215,8 +219,12 @@ class KakaoCallbackAPIView(APIView):
             user.refresh_token = token_req_json.get('refresh_token')
             user.save()
 
+        # 혹시 토큰 안 받아와지면 django에서 제공하는 토큰 생성
+        # token, _ = Token.objects.get_or_create(user=user)
+        
         login(request, user)
         return redirect('mypage:mypage')
+        # return Response(status=status.HTTP_202_ACCEPTED)
     
 ### 로그아웃
 @login_required

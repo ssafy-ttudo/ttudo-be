@@ -162,9 +162,9 @@ REST_FRAMEWORK = {
     # 기본 인증에 대한 설정
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # dj_rest_auth 의 인증 절차 중 JWTCookieAuthentication을 사용
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ),
     # 허가에 대한 설정
     'DEFAULT_PERMISSION_CLASSES': (
