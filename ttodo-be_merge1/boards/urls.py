@@ -10,12 +10,13 @@ urlpatterns = [
     # 댓글 작성
     path('article/<int:article_pk>/comment_create/', views.comment_create),
     path('article/<int:article_pk>/comment/<int:comment_pk>/detail_update_delete/', views.comment_detail_update_delete),
+    # path('article/<int:article_pk>/comment/<int:comment_pk>/reply/', views.comment_reply),
     
     
-#     # 달성 체크 url
-#     path('article/<int:article_pk>/is_completed', views.update),
+    # 달성 체크 url
+    path('article/<int:article_pk>/is_completed/', views.is_complete),
     #각 카테고리 메인 페이지
     path('<str:category_name>/', views.category_main),
-#     # 전체 메인 페이지
-#     path('', views.main),
+    # 전체 메인 페이지
+    path('', views.main),
 ]

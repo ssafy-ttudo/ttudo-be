@@ -25,5 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),  # allauth URL 패턴 추가
     path('mypage/', include('mypage.urls')),  # mypage경로 추가
-    path('ttodo/boards/', include('boards.urls')),
+    path('boards/', include('boards.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
