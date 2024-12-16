@@ -25,6 +25,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class ArticleCommentSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()  # like_count 메서드 추가
     comment_set = serializers.SerializerMethodField()  # 댓글 목록 포함
+    achieved_count = serializers.SerializerMethodField()  # 달성자 수
     class CommentSerializer(serializers.ModelSerializer):
         replies = serializers.SerializerMethodField()  # 대댓글 필드 추가
         class Meta:
@@ -45,6 +46,9 @@ class ArticleCommentSerializer(serializers.ModelSerializer):
         # 최상위 댓글만 가져오기 (parent_comment가 None인 댓글)
         comments = Comment.objects.filter(ttodo=obj, parent_comment=None)
         return CommentSerializer(comments, many=True, context=self.context).data
+    
+    def get_achieved_count(self, obj):
+        return obj.achieved_count()  # 달성자 수 반환
 
 class BoardSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()  # like_count 메서드 추가

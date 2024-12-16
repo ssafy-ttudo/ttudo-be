@@ -26,6 +26,9 @@ class Ttodo(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
     views = models.PositiveIntegerField(default=0)  # 조회수 필드 추가
+    def achieved_count(self):
+        return self.is_complete.count()  # Is_complete 모델의 related_name 사용
+    
     def like_count(self):
         return self.likes.count()  # TtodoLike 모델의 related_name을 통해 좋아요 개수를 반환
     # def has_liked(self, user): # 특정 사용자가 좋아요를 눌렀는지 여부
