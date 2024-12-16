@@ -158,7 +158,8 @@ class KakaoCallbackAPIView(APIView):
         grant_type = 'authorization_code'
         client_id = settings.KAKAO_CLIENT_ID
         client_secret = settings.KAKAO_CLIENT_SECRET
-        redirect_uri = main_domain + 'accounts/kakao/callback/'
+        redirect_uri = 'http://127.0.0.1:8000/accounts/kakao/callback/'
+
         
         token_req = requests.post(
             "https://kauth.kakao.com/oauth/token",
@@ -177,6 +178,8 @@ class KakaoCallbackAPIView(APIView):
         token_req_json = token_req.json()
         # print(token_req_json)
         access_token = token_req_json.get('access_token')
+        print("Token request response:", token_req.text)
+
         
         if not access_token:
             return Response({'error':'Failed to obtain access token.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -223,7 +226,14 @@ class KakaoCallbackAPIView(APIView):
         # token, _ = Token.objects.get_or_create(user=user)
         
         login(request, user)
-        return redirect('mypage:mypage')
+        login(request, user)
+        return Response({
+            'message': '로그인 성공',
+            'access_token': token_req_json.get('access_token'),
+            'refresh_token': token_req_json.get('refresh_token'),
+            'user_id': user.id
+        }, status=status.HTTP_200_OK)
+
         # return Response(status=status.HTTP_202_ACCEPTED)
     
 ### 로그아웃
@@ -252,36 +262,36 @@ from .serializers import UserInfoSerializer, UserListSerializer
 #             return Response(serializer.data, status=status.HTTP_200_OK)
 #     return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-### 친구 추가
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def friend(request):
-    # 나 (팔로우 하는 사람)
-    me = User.objects.filter(social_id=request.user)
-    # print(request.data.get('friend_id'))
-    if request.method == 'GET':
-        users = User.objects.all().exclude(social_id=request.user)
-        serializer = UserListSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    elif request.method == 'POST':
-        friend_id = request.data.get('friend_id')
-        if not friend:
-            return Response({'error': 'Friend_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            friend = User.objects.get(id=friend_id)
-        except User.DoesNotExist:
-            return Response({'error':'User not found.'}, status=status.HTTP_404_NOT_FOUND)
-        friendship, created = UserList.objects.get_or_create(
-            user=me, friend=friend
-        )
-        # 내 즐겨찾기에 상대방이 없다면
-        # 팔로우
-        if created:
-            return Response({'message':'Friend added successfully.'}, status=status.HTTP_201_CREATED)
-        # 내 즐겨찾기에 상대방이 있다면
-        # 언팔로우
-        else:
-            friendship.delete()
-            return Response({'message':'Friend removed successfully.'}, status=status.HTTP_200_OK)     
+# ### 친구 추가
+# @api_view(['GET', 'POST'])
+# @permission_classes([IsAuthenticated])
+# def friend(request):
+#     # 나 (팔로우 하는 사람)
+#     me = User.objects.filter(social_id=request.user)
+#     # print(request.data.get('friend_id'))
+#     if request.method == 'GET':
+#         users = User.objects.all().exclude(social_id=request.user)
+#         serializer = UserListSerializer(users, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     elif request.method == 'POST':
+#         friend_id = request.data.get('friend_id')
+#         if not friend:
+#             return Response({'error': 'Friend_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+#         try:
+#             friend = User.objects.get(id=friend_id)
+#         except User.DoesNotExist:
+#             return Response({'error':'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+#         friendship, created = UserList.objects.get_or_create(
+#             user=me, friend=friend
+#         )
+#         # 내 즐겨찾기에 상대방이 없다면
+#         # 팔로우
+#         if created:
+#             return Response({'message':'Friend added successfully.'}, status=status.HTTP_201_CREATED)
+#         # 내 즐겨찾기에 상대방이 있다면
+#         # 언팔로우
+#         else:
+#             friendship.delete()
+#             return Response({'message':'Friend removed successfully.'}, status=status.HTTP_200_OK)     
         
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+#     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

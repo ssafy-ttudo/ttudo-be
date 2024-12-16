@@ -1,57 +1,53 @@
 # mypage/views.py
 from rest_framework import status
-
-# django에 내장된 토큰 인증
-# from rest_framework.authentication import TokenAuthentication
-# from rest_framework.decorators import authentication_classes
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from accounts.models import User
-from .models import TtodoLike
+from accounts.models import User, UserList
 from boards.models import Ttodo
-from .serializers import TodoSerializer, LikedTodoSerializer
+from .models import TtodoLike
+from .serializers import TodoSerializer, LikedTodoSerializer, UserProfileSerializer, UserListSerializer
 
 @api_view(['GET'])
-# 토큰 인증 데코레이터
-# @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def mypage_view(request):
     user = request.user
     
-    # 내 투두 리스트
     my_todos = Ttodo.objects.filter(user=user)
-    
-    # 내가 좋아요한 투두 리스트
-    liked_todos = Ttodo.objects.filter(likes__user=user)
+    liked_todos = Ttodo.objects.filter(likes__user=user).select_related('user')
     
     data = {
-        'profile': {
-            'nickname': user.nickname,
-            'profile_img': user.profile_img,
-            'social_type': user.social,
-            'created_date': user.created_date,
-            'access_token': user.access_token,
-            'refresh_token': user.refresh_token,
-            'todo_count': my_todos.count(),
-        },
+        'profile': UserProfileSerializer(user, context={'request': request}).data,
         'my_todos': TodoSerializer(my_todos, many=True, context={'request': request}).data,
         'liked_todos': LikedTodoSerializer(liked_todos, many=True).data,
-        'bookmarked_users': [
-            {
-                'id': friend.id,
-                'nickname': friend.nickname,
-                'profile_img': friend.profile_img,
-                'todo_count': Ttodo.objects.filter(user=friend).count(),
-                'latest_todo': TodoSerializer(
-                    Ttodo.objects.filter(user=friend).first(),
-                    context={'request': request}
-                ).data if Ttodo.objects.filter(user=friend).exists() else None
-            }
-            for friend in user.friend_list.all()
-        ]
     }
     
     return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_list(request):
+    users = User.objects.all().exclude(id=request.user.id)
+    serializer = UserListSerializer(users, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def follow_unfollow(request):
+    friend_id = request.data.get('friend_id')
+    if not friend_id:
+        return Response({'error': 'Friend_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        friend = User.objects.get(id=friend_id)
+    except User.DoesNotExist:
+        return Response({'error':'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    friendship, created = UserList.objects.get_or_create(user=request.user, friend=friend)
+    
+    if created:
+        return Response({'message':'Friend added successfully.'}, status=status.HTTP_201_CREATED)
+    else:
+        friendship.delete()
+        return Response({'message':'Friend removed successfully.'}, status=status.HTTP_200_OK)
