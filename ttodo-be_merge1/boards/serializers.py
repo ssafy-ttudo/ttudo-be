@@ -11,6 +11,8 @@ class ArticleSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     replies = serializers.SerializerMethodField()  # 대댓글 목록 추가
+    like_count = serializers.SerializerMethodField()  # 좋아요 개수
+    has_liked = serializers.SerializerMethodField()  # 사용자의 좋아요 여부
     class Meta:
         model = Comment
         fields = '__all__'
@@ -20,6 +22,17 @@ class CommentSerializer(serializers.ModelSerializer):
         # 현재 댓글(obj)에 연결된 대댓글 가져오기
         replies = Comment.objects.filter(parent_comment=obj)
         return CommentSerializer(replies, many=True, context=self.context).data
+    
+    def get_like_count(self, obj):
+        # 좋아요 개수 반환
+        return obj.likes.count()
+
+    def get_has_liked(self, obj):
+        # 현재 사용자(request.user)가 좋아요를 눌렀는지 확인
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
     
         
 class ArticleCommentSerializer(serializers.ModelSerializer):

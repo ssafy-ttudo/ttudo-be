@@ -11,8 +11,8 @@ urlpatterns = [
     path('article/<int:article_pk>/comment_create/', views.comment_create),
     path('article/<int:article_pk>/comment/<int:comment_pk>/detail_update_delete/', views.comment_detail_update_delete),
     # path('article/<int:article_pk>/comment/<int:comment_pk>/reply/', views.comment_reply),
-    
-    
+    path('article/<int:article_pk>/comment/<int:comment_id>/like/', views.like_comment),
+
     # 달성 체크 url
     path('article/<int:article_pk>/is_completed/', views.is_complete),
     #각 카테고리 메인 페이지

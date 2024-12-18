@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from .models import Category, Ttodo, Comment, Is_complete
+from .models import Category, Ttodo, Comment, Is_complete, CommentLike
 from .serializers import ArticleSerializer, CommentSerializer, ArticleCommentSerializer,BoardSerializer
 from rest_framework.decorators import api_view, permission_classes
 from django.views.decorators.csrf import csrf_exempt
@@ -119,7 +119,21 @@ def comment_detail_update_delete(request, article_pk, comment_pk):
 #         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+@api_view(['POST'])
+def like_comment(request, comment_id):
+    comment = Comment.objects.get(id=comment_id)
+    
+    # 좋아요가 이미 눌려 있는지 확인
+    existing_like = CommentLike.objects.filter(comment=comment, user=request.user)
 
+    if existing_like.exists():
+        # 이미 눌려 있다면 좋아요 취소
+        existing_like.delete()
+        return Response({"message": "Like removed"}, status=status.HTTP_200_OK)
+    else:
+        # 좋아요 추가
+        CommentLike.objects.create(comment=comment, user=request.user)
+        return Response({"message": "Like added"}, status=status.HTTP_201_CREATED)
 
 
 # 달성여부 체크

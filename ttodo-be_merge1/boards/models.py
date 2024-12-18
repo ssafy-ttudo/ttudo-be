@@ -47,6 +47,14 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
 
+class CommentLike(models.Model):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('comment', 'user')  # 같은 댓글에 중복 좋아요 방지
+        
+
 class Is_complete(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='complete_todos', null=True, blank=True)
     ttodo = models.ForeignKey('boards.Ttodo', on_delete=models.CASCADE, related_name='is_complete')
