@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from accounts.models import User
-from .models import TtodoLike
-from boards.models import Ttodo
+# from .models import TtodoLike
+from boards.models import Ttodo, TtodoLike
 from .serializers import TodoSerializer, LikedTodoSerializer
 
 @api_view(['GET'])

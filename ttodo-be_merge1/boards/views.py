@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
-from .models import Category, Ttodo, Comment, Is_complete, CommentLike
+from .models import Category, Ttodo, Comment, Is_complete, TtodoLike, CommentLike
 from .serializers import ArticleSerializer, CommentSerializer, ArticleCommentSerializer, BoardSerializer
 
 class CustomPagination(PageNumberPagination):
@@ -20,6 +20,7 @@ class CustomPagination(PageNumberPagination):
            'results': data
        })
 
+# 전체 메인 페이지
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def main(request):
@@ -29,6 +30,8 @@ def main(request):
    serializer = BoardSerializer(paginated_articles, many=True)
    return paginator.get_paginated_response(serializer.data)
 
+
+# 카테고리 메인 페이지
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def category_main(request, category_name):
@@ -37,6 +40,7 @@ def category_main(request, category_name):
    paginated_articles = paginator.paginate_queryset(category_articles, request)
    serializer = BoardSerializer(paginated_articles, many=True)
    return paginator.get_paginated_response(serializer.data)
+
 
 # 게시글 crud
 @api_view(['POST'])
@@ -66,6 +70,27 @@ def article_detail_update_delete(request, article_pk):
        article.increment_views()  # 조회수 1 증가
        serializer = ArticleCommentSerializer(article)
        return Response(serializer.data)
+   
+   
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def like_ttodo(request, ttodo_id):
+    ttodo = Ttodo.objects.get(id=ttodo_id)
+ 
+    # 좋아요가 이미 눌려 있는지 확인
+    # existing_like = TtodoLike.objects.filter(ttodo=ttodo, user=request.user)
+    existing_like = TtodoLike.objects.filter(ttodo=ttodo)
+    
+
+    if existing_like.exists():
+        # 이미 눌려 있다면 좋아요 취소
+        existing_like.delete()
+        return Response({"message": "Like removed"}, status=status.HTTP_200_OK)
+    else:
+        # 좋아요 추가
+        TtodoLike.objects.create(ttodo=ttodo, user=request.user)
+        return Response({"message": "Like added"}, status=status.HTTP_201_CREATED)
+
 
 # 댓글 crud
 @api_view(['POST'])
@@ -115,8 +140,9 @@ def comment_detail_update_delete(request, article_pk, comment_pk):
 
 
 @api_view(['POST'])
-def like_comment(request, comment_id):
-    comment = Comment.objects.get(id=comment_id)
+@permission_classes([AllowAny])
+def like_comment(request, comment_pk):
+    comment = Comment.objects.get(id=comment_pk)
     
     # 좋아요가 이미 눌려 있는지 확인
     existing_like = CommentLike.objects.filter(comment=comment, user=request.user)

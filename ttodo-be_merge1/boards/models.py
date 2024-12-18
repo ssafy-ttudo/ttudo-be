@@ -1,21 +1,12 @@
 from django.db import models
 from django.conf import settings
-from mypage.models import TtodoLike
+# from mypage.models import TtodoLike
 
 # Create your models here.
 class Category(models.Model):
 	category_name = models.CharField(max_length=20)
 
 class Ttodo(models.Model):
-    # category_choice = [
-    #     ('learning', '학습'),
-    #     ('exercise', '운동'),
-    #     ('food', '음식'),
-    #     ('lifestyle', '생활루틴'),
-    #     ('celebrity', '셀럽'),
-    #     ('etc', '기타'),    
-    # ]
-    
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     # category_name = models.CharField(max_length=20, choices=category_choice)
     category_name = models.CharField(max_length=20)    
@@ -37,6 +28,15 @@ class Ttodo(models.Model):
     def increment_views(self): # 조회수 증가
         self.views += 1
         self.save(update_fields=['views'])  # views 필드만 업데이트
+        
+class TtodoLike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='liked_todos')
+    ttodo = models.ForeignKey(Ttodo, on_delete=models.CASCADE, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'ttodo')
+        
     
 class Comment(models.Model):
     ttodo = models.ForeignKey(Ttodo, on_delete=models.CASCADE)

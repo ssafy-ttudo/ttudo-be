@@ -1,7 +1,7 @@
 # mypage/serializers.py
 from rest_framework import serializers
-from .models import TtodoLike
-from boards.models import Ttodo
+# from .models import TtodoLike
+from boards.models import Ttodo, TtodoLike
 
 class TodoSerializer(serializers.ModelSerializer):
     is_liked = serializers.SerializerMethodField()

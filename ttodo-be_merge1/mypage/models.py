@@ -35,10 +35,10 @@ from django.conf import settings
 # ## 새로 추가한 모델 - 필요없지않나?
 # # mypage/models.py
 
-class TtodoLike(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='liked_todos')
-    ttodo = models.ForeignKey('boards.Ttodo', on_delete=models.CASCADE, related_name='likes')
-    created_at = models.DateTimeField(auto_now_add=True)
+# class TtodoLike(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='liked_todos')
+#     ttodo = models.ForeignKey('boards.Ttodo', on_delete=models.CASCADE, related_name='likes')
+#     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('user', 'ttodo')
+#     class Meta:
+#         unique_together = ('user', 'ttodo')
