@@ -24,7 +24,7 @@ class CustomPagination(PageNumberPagination):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def main(request):
-   articles = Ttodo.objects.all()
+   articles = Ttodo.objects.all().order_by('-create_date')
    paginator = CustomPagination()
    paginated_articles = paginator.paginate_queryset(articles, request)
    serializer = BoardSerializer(paginated_articles, many=True)
@@ -35,7 +35,7 @@ def main(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def category_main(request, category_name):
-   category_articles = Ttodo.objects.filter(category_name=category_name)
+   category_articles = Ttodo.objects.filter(category_name=category_name).order_by('-create_date')
    paginator = CustomPagination()
    paginated_articles = paginator.paginate_queryset(category_articles, request)
    serializer = BoardSerializer(paginated_articles, many=True)
