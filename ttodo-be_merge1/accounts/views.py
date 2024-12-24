@@ -4,6 +4,7 @@ from django.contrib.auth import login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_list_or_404, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -158,7 +159,7 @@ class KakaoCallbackAPIView(APIView):
         grant_type = 'authorization_code'
         client_id = settings.KAKAO_CLIENT_ID
         client_secret = settings.KAKAO_CLIENT_SECRET
-        redirect_uri = 'http://127.0.0.1:8000/accounts/kakao/callback/'
+        redirect_uri = 'http://localhost:3000/kakao'
 
         
         token_req = requests.post(
@@ -226,13 +227,14 @@ class KakaoCallbackAPIView(APIView):
         # token, _ = Token.objects.get_or_create(user=user)
         
         login(request, user)
-        login(request, user)
+        # login(request, user)
         return Response({
             'message': '로그인 성공',
             'access_token': token_req_json.get('access_token'),
             'refresh_token': token_req_json.get('refresh_token'),
             'user_id': user.id
         }, status=status.HTTP_200_OK)
+        # return redirect('mypage:mypage')
 
         # return Response(status=status.HTTP_202_ACCEPTED)
     
