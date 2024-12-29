@@ -113,8 +113,15 @@ class NaverCallbackAPIView(APIView):
             
             
             # 사용자 정보 반환 (예: 프론트엔드로 전달)
-            return redirect('mypage:mypage')
+            # return redirect('mypage:mypage')
             # return Response({'token_key':token.key, 'token':token}, status=status.HTTP_202_ACCEPTED)
+            return Response({
+                "messsage": "로그인 성공",
+                "redirect_url" : "/mypage",
+                "access": user.access_token,
+                "refresh": user.refresh_token,
+                "user_id": user.id
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             print(f"에러 발생: {e}")
