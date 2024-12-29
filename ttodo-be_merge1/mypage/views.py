@@ -1,4 +1,3 @@
-# mypage/views.py
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -6,24 +5,48 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from accounts.models import User, UserList
 from boards.models import Ttodo
-from .models import TtodoLike
 from .serializers import TodoSerializer, LikedTodoSerializer, UserProfileSerializer, UserListSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def mypage_view(request):
-    user = request.user
-    
+def user_profile_view(request, username=None):
+    if username:
+        user = get_object_or_404(User, username=username)
+    else:
+        user = request.user
+    is_own_profile = user == request.user
+
     my_todos = Ttodo.objects.filter(user=user)
-    liked_todos = Ttodo.objects.filter(likes__user=user).select_related('user')
-    
+    liked_todos = Ttodo.objects.filter(likes__user=user)
+
     data = {
-        'profile': UserProfileSerializer(user, context={'request': request}).data,
+        'profile': {
+            'nickname': user.nickname,
+            'profile_img': user.profile_img,
+            'social_type': user.social,
+            'created_date': user.created_date,
+            'todo_count': my_todos.count(),
+        },
+        'is_own_profile': is_own_profile,
         'my_todos': TodoSerializer(my_todos, many=True, context={'request': request}).data,
         'liked_todos': LikedTodoSerializer(liked_todos, many=True).data,
+        'bookmarked_users': [
+            {
+                'id': friend.id,
+                'nickname': friend.nickname,
+                'profile_img': friend.profile_img,
+                'todo_count': Ttodo.objects.filter(user=friend).count(),
+                'latest_todo': TodoSerializer(
+                    Ttodo.objects.filter(user=friend).first(),
+                    context={'request': request}
+                ).data if Ttodo.objects.filter(user=friend).exists() else None
+            }
+            for friend in user.friend_list.all()
+        ] if is_own_profile else []
     }
-    
     return Response(data)
+
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
