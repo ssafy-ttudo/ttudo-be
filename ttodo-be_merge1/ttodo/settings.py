@@ -12,16 +12,20 @@ SECRET_BASE_FILE = os.path.join(BASE_DIR, 'secrets.json')
 # secrets.json 파일을 읽고, json key/value 값들을 secrets에 할당합니다.
 secrets = json.load(open(SECRET_BASE_FILE))
 
-# setattr을 이용해 key 값은 변수명, value 값은 값으로 각 변수에 할당합니다.
+# SECRET_KEY를 명시적으로 설정
+SECRET_KEY = secrets["SECRET_KEY"]
+
+# 나머지 설정들을 동적으로 할당
 for key, value in secrets.items():
-    setattr(sys.modules[__name__], key, value)
+    if key != "SECRET_KEY":  # SECRET_KEY는 이미 설정했으므로 제외
+        setattr(sys.modules[__name__], key, value)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -30,6 +34,7 @@ INSTALLED_APPS = [
     'accounts',
     'mypage',
     'boards',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -68,9 +73,9 @@ SITE_ID = 1 #추가
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -170,14 +175,15 @@ REST_FRAMEWORK = {
     # 기본 인증에 대한 설정
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # dj_rest_auth 의 인증 절차 중 JWTCookieAuthentication을 사용
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ),
     # 허가에 대한 설정
     'DEFAULT_PERMISSION_CLASSES': (
     	# 인증이 완료된 사용자에 한해서 접근 허가
         'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     )
 }
 
@@ -208,3 +214,32 @@ LOGIN_REDIRECT_URL = 'mypage:mypage'  # 'home'은 로그인 후 리다이렉트�
 MAIN_DOMAIN = 'http://127.0.0.1:8000/'
 
 SOCIALACCOUNT_STORE_TOKENS = True
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]

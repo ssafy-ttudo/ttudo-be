@@ -4,7 +4,9 @@ from django.contrib.auth import login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_list_or_404, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 import requests
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
@@ -103,13 +105,23 @@ class NaverCallbackAPIView(APIView):
             user.refresh_token = token_data.get("refresh_token")
             user.save()
 
-
+            # 혹시 토큰 안 받아와지면 django에서 제공하는 토큰 생성
+            # token, _ = Token.objects.get_or_create(user=user)
+            
             login(request, user)
             
             
             
             # 사용자 정보 반환 (예: 프론트엔드로 전달)
-            return redirect('mypage:mypage')
+            # return redirect('mypage:mypage')
+            # return Response({'token_key':token.key, 'token':token}, status=status.HTTP_202_ACCEPTED)
+            return Response({
+                "messsage": "로그인 성공",
+                "redirect_url" : "/mypage",
+                "access": user.access_token,
+                "refresh": user.refresh_token,
+                "user_id": user.id
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             print(f"에러 발생: {e}")
@@ -154,7 +166,8 @@ class KakaoCallbackAPIView(APIView):
         grant_type = 'authorization_code'
         client_id = settings.KAKAO_CLIENT_ID
         client_secret = settings.KAKAO_CLIENT_SECRET
-        redirect_uri = main_domain + 'accounts/kakao/callback/'
+        redirect_uri = 'http://localhost:3000/kakao'
+
         
         token_req = requests.post(
             "https://kauth.kakao.com/oauth/token",
@@ -173,6 +186,8 @@ class KakaoCallbackAPIView(APIView):
         token_req_json = token_req.json()
         # print(token_req_json)
         access_token = token_req_json.get('access_token')
+        print("Token request response:", token_req.text)
+
         
         if not access_token:
             return Response({'error':'Failed to obtain access token.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -215,8 +230,20 @@ class KakaoCallbackAPIView(APIView):
             user.refresh_token = token_req_json.get('refresh_token')
             user.save()
 
+        # 혹시 토큰 안 받아와지면 django에서 제공하는 토큰 생성
+        # token, _ = Token.objects.get_or_create(user=user)
+        
         login(request, user)
-        return redirect('mypage:mypage')
+        # login(request, user)
+        return Response({
+            'message': '로그인 성공',
+            'access_token': token_req_json.get('access_token'),
+            'refresh_token': token_req_json.get('refresh_token'),
+            'user_id': user.id
+        }, status=status.HTTP_200_OK)
+        # return redirect('mypage:mypage')
+
+        # return Response(status=status.HTTP_202_ACCEPTED)
     
 ### 로그아웃
 @login_required
@@ -244,36 +271,36 @@ from .serializers import UserInfoSerializer, UserListSerializer
 #             return Response(serializer.data, status=status.HTTP_200_OK)
 #     return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-### 친구 추가
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def friend(request):
-    # 나 (팔로우 하는 사람)
-    me = User.objects.filter(social_id=request.user)
-    # print(request.data.get('friend_id'))
-    if request.method == 'GET':
-        users = User.objects.all().exclude(social_id=request.user)
-        serializer = UserListSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    elif request.method == 'POST':
-        friend_id = request.data.get('friend_id')
-        if not friend:
-            return Response({'error': 'Friend_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            friend = User.objects.get(id=friend_id)
-        except User.DoesNotExist:
-            return Response({'error':'User not found.'}, status=status.HTTP_404_NOT_FOUND)
-        friendship, created = UserList.objects.get_or_create(
-            user=me, friend=friend
-        )
-        # 내 즐겨찾기에 상대방이 없다면
-        # 팔로우
-        if created:
-            return Response({'message':'Friend added successfully.'}, status=status.HTTP_201_CREATED)
-        # 내 즐겨찾기에 상대방이 있다면
-        # 언팔로우
-        else:
-            friendship.delete()
-            return Response({'message':'Friend removed successfully.'}, status=status.HTTP_200_OK)     
+# ### 친구 추가
+# @api_view(['GET', 'POST'])
+# @permission_classes([IsAuthenticated])
+# def friend(request):
+#     # 나 (팔로우 하는 사람)
+#     me = User.objects.filter(social_id=request.user)
+#     # print(request.data.get('friend_id'))
+#     if request.method == 'GET':
+#         users = User.objects.all().exclude(social_id=request.user)
+#         serializer = UserListSerializer(users, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     elif request.method == 'POST':
+#         friend_id = request.data.get('friend_id')
+#         if not friend:
+#             return Response({'error': 'Friend_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+#         try:
+#             friend = User.objects.get(id=friend_id)
+#         except User.DoesNotExist:
+#             return Response({'error':'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+#         friendship, created = UserList.objects.get_or_create(
+#             user=me, friend=friend
+#         )
+#         # 내 즐겨찾기에 상대방이 없다면
+#         # 팔로우
+#         if created:
+#             return Response({'message':'Friend added successfully.'}, status=status.HTTP_201_CREATED)
+#         # 내 즐겨찾기에 상대방이 있다면
+#         # 언팔로우
+#         else:
+#             friendship.delete()
+#             return Response({'message':'Friend removed successfully.'}, status=status.HTTP_200_OK)     
         
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+#     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

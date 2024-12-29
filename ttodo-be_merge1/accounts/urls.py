@@ -24,5 +24,5 @@ urlpatterns = [
     # path('mypage/', views.mypage, name='mypage'),
     
     ### 친구 추가
-    path('friend/', views.friend, name='friend'),
+    # path('friend/', views.friend, name='friend'),
 ]
