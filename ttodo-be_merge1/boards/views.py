@@ -44,7 +44,7 @@ def category_main(request, category_name):
 
 # 게시글 crud
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def article_create(request):
    serializer = ArticleSerializer(data=request.data)
    if serializer.is_valid(raise_exception=True):
@@ -52,7 +52,7 @@ def article_create(request):
        return Response(serializer.data)
 
 @api_view(['GET', 'DELETE', 'PUT'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def article_detail_update_delete(request, article_pk):
    article = Ttodo.objects.get(pk=article_pk)
    if request.method == 'DELETE':
@@ -73,7 +73,7 @@ def article_detail_update_delete(request, article_pk):
    
    
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def like_ttodo(request, ttodo_id):
     ttodo = Ttodo.objects.get(id=ttodo_id)
  
@@ -94,7 +94,7 @@ def like_ttodo(request, ttodo_id):
 
 # 댓글 crud
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def comment_create(request, article_pk):
    article = Ttodo.objects.get(pk=article_pk)
    parent_comment_id = request.data.get('parent_comment')  # 요청에서 parent_comment ID를 가져옴
@@ -108,7 +108,7 @@ def comment_create(request, article_pk):
        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @api_view(['GET', 'DELETE', 'PUT'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def comment_detail_update_delete(request, article_pk, comment_pk):
    comment = Comment.objects.get(pk=comment_pk)
    
@@ -140,7 +140,7 @@ def comment_detail_update_delete(request, article_pk, comment_pk):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def like_comment(request, comment_pk):
     comment = Comment.objects.get(id=comment_pk)
     
@@ -159,7 +159,7 @@ def like_comment(request, comment_pk):
 
 # 달성여부 체크
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def is_complete(request, article_pk):
    try:
        ttodo = Ttodo.objects.get(id=article_pk)  # 해당 게시글 찾기
