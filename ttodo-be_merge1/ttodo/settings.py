@@ -34,7 +34,6 @@ INSTALLED_APPS = [
     'accounts',
     'mypage',
     'boards',
-    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -83,10 +82,6 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware', # 추가
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:8000",
-]
 
 CORS_ORIGIN_ALLOW_ALL = True
 
