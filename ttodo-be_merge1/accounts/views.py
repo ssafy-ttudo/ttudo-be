@@ -229,26 +229,20 @@ class KakaoCallbackAPIView(APIView):
         # print(profile_img)
         # print(social_id)
         
-        if not User.objects.get(username=social_id):
-            user, created = User.objects.get_or_create(
-                social_id=social_id,
-                defaults={
-                    'nickname': nickname,
-                    'profile_img': profile_img,
-                    'username': social_id,
-                    'social': 'KAKAO',
-                    'access_token': token_req_json.get('access_token'),
-                    'refresh_token': token_req_json.get('refresh_token'),
-                }
-            )
-            if not created:
-                user.access_token = token_req_json.get('access_token')
-                user.refresh_token = token_req_json.get('refresh_token')
-                user.save()
-        else:
-            user = User.objects.get(username=social_id)
-        #     print(user.nickname)
-        # print(user)
+        user, created = User.objects.get_or_create(
+            social_id=social_id,
+            defaults={
+                'nickname': nickname,
+                'profile_img': profile_img,
+                'username': social_id,
+                'social': 'KAKAO',
+                'access_token': token_req_json.get('access_token'),
+                'refresh_token': token_req_json.get('refresh_token'),
+            }
+        )
+        user.access_token = token_req_json.get('access_token')
+        user.refresh_token = token_req_json.get('refresh_token')
+        user.save()
 
 
         # JWT 토큰 생성
@@ -256,6 +250,7 @@ class KakaoCallbackAPIView(APIView):
             jwt_token = RefreshToken.for_user(user)
             user.jwt_access_token = str(jwt_token.access_token)
             user.jwt_refresh_token = str(jwt_token)
+            user.save()
             # print(jwt_token)
             # print(jwt_token.access_token)
         print(user.jwt_access_token)
@@ -284,12 +279,14 @@ def logout(request):
     print(request.user)
     user = request.user
     # user = User.objects.get(username=user.social_id)
-    user.jwt_access_token = None
-    user.jwt_refresh_token = None
-    user.save()
-    auth_logout(request)
-    print(request.user)
-    return Response(status=status.HTTP_200_OK)
+    if user.jwt_access_token:
+        user.jwt_access_token = None
+        user.jwt_refresh_token = None
+        user.save()
+        auth_logout(request)
+        print(request.user)
+        return Response(status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 from .serializers import UserInfoSerializer, UserListSerializer
 
