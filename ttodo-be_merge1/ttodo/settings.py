@@ -237,8 +237,9 @@ CORS_ALLOW_HEADERS = [
     'origin',
     'user-agent',
     'x-csrftoken',
-    # 'x-CSRFToken',
     'csrftoken'
     'x-requested-with',
 ]
 
+CSRF_COOKIE_NAME = 'XSRF-TOKEN'
+CSRF_HEADER_NAME = 'X-XSRF-TOKEN'
