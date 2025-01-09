@@ -242,6 +242,3 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-CSRF_COOKIE_NAME = 'CSRF-TOKEN'
-
-CSRF_HEADER_NAME = 'X-CSRF-TOKEN'
