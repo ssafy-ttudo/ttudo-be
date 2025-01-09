@@ -12,6 +12,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from jwt.exceptions import InvalidKeyError
 from .models import User, UserList
 
 
@@ -100,13 +102,25 @@ class NaverCallbackAPIView(APIView):
                     'social':'NAVER',
                 }
             )
-            
+        
             user.access_token = token_data.get("access_token")
             user.refresh_token = token_data.get("refresh_token")
             user.save()
+            # user = User.objects.get(username=social_id)
 
             # 혹시 토큰 안 받아와지면 django에서 제공하는 토큰 생성
             # token, _ = Token.objects.get_or_create(user=user)
+
+            # JWT 토큰 생성성
+            if user:
+                jwt_token = RefreshToken.for_user(user)
+                user.jwt_access_token = str(jwt_token.access_token)
+                user.jwt_refresh_token = str(jwt_token)
+                user.save()
+                # print(jwt_token)
+                # print(jwt_token.access_token)
+            print(user.jwt_access_token)
+            print(user.jwt_refresh_token)
             
             login(request, user)
             
@@ -118,8 +132,10 @@ class NaverCallbackAPIView(APIView):
             return Response({
                 "messsage": "로그인 성공",
                 "redirect_url" : "/mypage",
-                "access": user.access_token,
-                "refresh": user.refresh_token,
+                "access_token": user.access_token,
+                "refresh_token": user.refresh_token,
+                "jwt_access_token": user.jwt_access_token,
+                "jwt_refresh_token":user.jwt_refresh_token,
                 "user_id": user.id
             }, status=status.HTTP_200_OK)
 
@@ -156,7 +172,7 @@ class KakaoCallbackAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         code = request.GET.get('code')
-        print(code)
+        # print(code)
         
         if not code:
             error = request.GET.get('error')
@@ -166,13 +182,13 @@ class KakaoCallbackAPIView(APIView):
         grant_type = 'authorization_code'
         client_id = settings.KAKAO_CLIENT_ID
         client_secret = settings.KAKAO_CLIENT_SECRET
-        redirect_uri = 'http://localhost:3000/kakao'
-
+        # redirect_uri = 'http://localhost:3000/kakao'
+        redirect_uri = 'http://127.0.0.1:8000/accounts/kakao/callback/'
         
         token_req = requests.post(
             "https://kauth.kakao.com/oauth/token",
             headers={
-                "Content-type": "application/x-www-form-urlencoded"
+                "Content-type": "application/x-www-form-urlencoded;charset=utf-8"
             },
             data={
                 "grant_type":grant_type,
@@ -186,7 +202,7 @@ class KakaoCallbackAPIView(APIView):
         token_req_json = token_req.json()
         # print(token_req_json)
         access_token = token_req_json.get('access_token')
-        print("Token request response:", token_req.text)
+        # print("Token request response:", token_req.text)
 
         
         if not access_token:
@@ -213,23 +229,37 @@ class KakaoCallbackAPIView(APIView):
         # print(profile_img)
         # print(social_id)
         
-        user, created = User.objects.get_or_create(
-            social_id=social_id,
-            defaults={
-                'nickname': nickname,
-                'profile_img': profile_img,
-                'username': social_id,
-                'social': 'KAKAO',
-                'access_token': token_req_json.get('access_token'),
-                'refresh_token': token_req_json.get('refresh_token'),
-            }
-        )
+        if not User.objects.get(username=social_id):
+            user, created = User.objects.get_or_create(
+                social_id=social_id,
+                defaults={
+                    'nickname': nickname,
+                    'profile_img': profile_img,
+                    'username': social_id,
+                    'social': 'KAKAO',
+                    'access_token': token_req_json.get('access_token'),
+                    'refresh_token': token_req_json.get('refresh_token'),
+                }
+            )
+            if not created:
+                user.access_token = token_req_json.get('access_token')
+                user.refresh_token = token_req_json.get('refresh_token')
+                user.save()
+        else:
+            user = User.objects.get(username=social_id)
+        #     print(user.nickname)
+        # print(user)
 
-        if not created:
-            user.access_token = token_req_json.get('access_token')
-            user.refresh_token = token_req_json.get('refresh_token')
-            user.save()
 
+        # JWT 토큰 생성
+        if user:
+            jwt_token = RefreshToken.for_user(user)
+            user.jwt_access_token = str(jwt_token.access_token)
+            user.jwt_refresh_token = str(jwt_token)
+            # print(jwt_token)
+            # print(jwt_token.access_token)
+        print(user.jwt_access_token)
+        print(user.jwt_refresh_token)
         # 혹시 토큰 안 받아와지면 django에서 제공하는 토큰 생성
         # token, _ = Token.objects.get_or_create(user=user)
         
@@ -237,8 +267,10 @@ class KakaoCallbackAPIView(APIView):
         # login(request, user)
         return Response({
             'message': '로그인 성공',
-            'access_token': token_req_json.get('access_token'),
-            'refresh_token': token_req_json.get('refresh_token'),
+            'access_token': user.access_token,
+            'refresh_token': user.refresh_token,
+            'jwt_access_token':user.jwt_access_token,
+            'jwt_refresh_token':user.jwt_refresh_token,
             'user_id': user.id
         }, status=status.HTTP_200_OK)
         # return redirect('mypage:mypage')
@@ -247,10 +279,17 @@ class KakaoCallbackAPIView(APIView):
     
 ### 로그아웃
 @login_required
+# @api_view(['POST'])
 def logout(request):
+    print(request.user)
+    user = request.user
+    # user = User.objects.get(username=user.social_id)
+    user.jwt_access_token = None
+    user.jwt_refresh_token = None
+    user.save()
     auth_logout(request)
     print(request.user)
-    return redirect('accounts:index')
+    return Response(status=status.HTTP_200_OK)
     
 from .serializers import UserInfoSerializer, UserListSerializer
 

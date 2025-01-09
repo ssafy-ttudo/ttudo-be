@@ -170,6 +170,7 @@ REST_FRAMEWORK = {
     # 기본 인증에 대한 설정
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # dj_rest_auth 의 인증 절차 중 JWTCookieAuthentication을 사용
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
@@ -215,8 +216,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
-CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', "http://127.0.0.1:3000",]
+CORS_ORIGIN_WHITELIST = ['http://localhost:3000', "http://127.0.0.1:3000",]
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -236,5 +237,11 @@ CORS_ALLOW_HEADERS = [
     'origin',
     'user-agent',
     'x-csrftoken',
+    # 'x-CSRFToken',
+    'csrftoken'
     'x-requested-with',
 ]
+
+CSRF_COOKIE_NAME = 'CSRF-TOKEN'
+
+CSRF_HEADER_NAME = 'X-CSRF-TOKEN'
