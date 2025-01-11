@@ -74,8 +74,8 @@ def article_detail_update_delete(request, article_pk):
    
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def like_ttodo(request, ttodo_id):
-    ttodo = Ttodo.objects.get(id=ttodo_id)
+def like_ttodo(request, article_pk):
+    ttodo = Ttodo.objects.get(id=article_pk)
  
     # 좋아요가 이미 눌려 있는지 확인
     # existing_like = TtodoLike.objects.filter(ttodo=ttodo, user=request.user)
@@ -141,7 +141,7 @@ def comment_detail_update_delete(request, article_pk, comment_pk):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def like_comment(request, comment_pk):
+def like_comment(request, comment_pk, article_pk):
     comment = Comment.objects.get(id=comment_pk)
     
     # 좋아요가 이미 눌려 있는지 확인
